@@ -1,6 +1,6 @@
 import Link from "next/link";
 
-export function Sidebar() {
+export default function Sidebar() {
   const menuItems = [
     { name: "Home", href: "/", icon: "📊" },
     { name: "Portfolio", href: "/portfolio", icon: "💼" },
