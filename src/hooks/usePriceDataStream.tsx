@@ -1,13 +1,14 @@
 "use client"; // Хук работает строго в браузере с оконным окружением
 
-import { useState, useEffect } from "react";
+import { useEffect, useState } from "react";
 
 export interface CryptoData {
-  price: string | null;
+  price: string;
   isUp: "+" | "-" | "=";
 }
 
-const UPDATE_INTERVAL = 1000;
+const UPDATE_INTERVAL = 1000; // мс
+const MAX_RETRY_DELAY = 15000;
 
 export function usePriceDataStream(symbol: string = "btcusdt") {
   const [data, setData] = useState<CryptoData>({
@@ -16,53 +17,84 @@ export function usePriceDataStream(symbol: string = "btcusdt") {
   });
 
   useEffect(() => {
-    const wsUrl = `wss://stream.binance.com:9443/ws/${symbol.toLocaleLowerCase()}@aggTrade`;
-    const ws = new WebSocket(wsUrl);
-
+    let disposed = false;
+    let ws: WebSocket | null = null;
+    let retry = 0;
     let latestPrice: string | null = null;
-    let timer: ReturnType<typeof setTimeout> | null = null;
+    let flushTimer: ReturnType<typeof setTimeout> | null = null;
+    let reconnectTimer: ReturnType<typeof setTimeout> | null = null;
+
+    const url = `wss://stream.binance.com:9443/ws/${symbol.toLowerCase()}@aggTrade`;
 
     const flush = () => {
-      timer = null;
-      if (latestPrice === null) return;
+      flushTimer = null;
+      if (latestPrice === null || disposed) return;
 
-      setData((prevData) => {
-        const curr = Number(latestPrice);
-        const prev = Number(prevData.price);
+      const nextPrice = latestPrice;
+      latestPrice = null;
+
+      setData((prev) => {
+        const curr = Number(nextPrice);
+        const prevPrice = Number(prev.price);
         return {
-          price: latestPrice,
-          isUp: curr > prev ? "+" : curr < prev ? "-" : "=",
+          price: nextPrice,
+          isUp: curr > prevPrice ? "+" : curr < prevPrice ? "-" : "=",
         };
       });
-      latestPrice = null;
     };
 
-    ws.onmessage = (event) => {
-      try {
-        const response = JSON.parse(event.data);
-        const currentPrice = Number.parseFloat(response.p).toFixed(2);
+    const connect = () => {
+      ws = new WebSocket(url);
 
-        if (!currentPrice) return;
+      ws.onopen = () => {
+        retry = 0;
+      };
 
-        latestPrice = currentPrice;
+      ws.onmessage = (event) => {
+        try {
+          const response = JSON.parse(event.data);
+          const raw = response?.p;
 
-        if (timer === null) {
-          timer = setTimeout(flush, UPDATE_INTERVAL);
+          if (raw === null || raw === undefined || raw === "") return;
+
+          const parsed = Number.parseFloat(raw);
+          if (!Number.isFinite(parsed)) return;
+
+          latestPrice = parsed.toFixed(2);
+          if (flushTimer === null) {
+            flushTimer = setTimeout(flush, UPDATE_INTERVAL);
+          }
+        } catch (error) {
+          console.error("WebSocket data parsing error:", error);
         }
-      } catch (error) {
-        console.error("WebSocket data parsing error:", error);
-      }
+      };
+
+      ws.onerror = (error) => {
+        console.error(`WebSocket error for ${symbol}:`, error);
+      };
+
+      ws.onclose = () => {
+        if (flushTimer !== null) clearTimeout(flushTimer);
+        flush(); // сливаем буфер, чтобы не потерять последнюю цену
+
+        if (disposed) return;
+
+        // экспоненциальный бэкофф: 1с, 2с, 4с... максимум 15с
+        const delay = Math.min(1000 * 2 ** retry++, MAX_RETRY_DELAY);
+        reconnectTimer = setTimeout(connect, delay);
+      };
     };
 
-    ws.onerror = (error) => {
-      console.error(`WebSocket for token ${symbol}:`, error);
-    };
+    connect();
 
     return () => {
-      if (timer !== null) clearTimeout(timer);
+      disposed = true;
+      if (flushTimer !== null) clearTimeout(flushTimer);
+      if (reconnectTimer !== null) clearTimeout(reconnectTimer);
       if (
-        ws.readyState === WebSocket.OPEN ||
-        ws.readyState === WebSocket.CONNECTING
+        ws &&
+        (ws.readyState === WebSocket.OPEN ||
+          ws.readyState === WebSocket.CONNECTING)
       ) {
         ws.close();
       }

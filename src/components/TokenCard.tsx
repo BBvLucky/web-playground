@@ -1,6 +1,8 @@
 "use client";
 
+import { memo } from "react";
 import { usePriceDataStream } from "@/hooks/usePriceDataStream";
+import type { CryptoData } from "@/hooks/usePriceDataStream";
 
 interface Props {
   symbol: string;
@@ -8,19 +10,15 @@ interface Props {
   icon: string;
 }
 
-export default function TokenCard({ symbol, name, icon }: Props) {
-  const { price, isUp } = usePriceDataStream(symbol);
+const ANIMATION_CLASS: Record<CryptoData["isUp"], string> = {
+  "+": "animate-flash-up",
+  "-": "animate-flash-down",
+  "=": "",
+};
 
-  const setClass = () => {
-    switch (isUp) {
-      case "+":
-        return "animate-flash-up";
-      case "-":
-        return "animate-flash-down";
-      case "=":
-        return "";
-    }
-  };
+function TokenCard({ symbol, name, icon }: Props) {
+  const { price, isUp } = usePriceDataStream(symbol);
+  const upperSymbol = symbol.toUpperCase();
 
   return (
     <div className="bg-bg-card border border-neutral-200 dark:border-neutral-800 p-5 rounded-xl shadow-sm flex flex-col gap-4 transition-all hover:border-neutral-300 dark:hover:border-neutral-700">
@@ -32,7 +30,7 @@ export default function TokenCard({ symbol, name, icon }: Props) {
           <div>
             <h3 className="font-bold text-sm leading-none">{name}</h3>
             <span className="text-xs text-neutral-400 font-mono uppercase">
-              {symbol.replace("USDT", "")}
+              {upperSymbol.replace("USDT", "")}
             </span>
           </div>
         </div>
@@ -40,7 +38,8 @@ export default function TokenCard({ symbol, name, icon }: Props) {
 
       <div>
         <span
-          className={`text-2xl font-black font-mono tracking-tight inline-block ${setClass()}`}
+          key={price}
+          className={`text-2xl font-black font-mono tracking-tight inline-block ${ANIMATION_CLASS[isUp]}`}
         >
           ${price}
         </span>
@@ -51,3 +50,5 @@ export default function TokenCard({ symbol, name, icon }: Props) {
     </div>
   );
 }
+
+export default memo(TokenCard);
