@@ -12,6 +12,7 @@
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
   --color-bg-card: var(--card);
+
   @keyframes flash-green {
     0% {
       color: #10b981;
@@ -20,6 +21,7 @@
       color: inherit;
     }
   }
+
   @keyframes flash-red {
     0% {
       color: #f43f5e;
@@ -31,6 +33,103 @@
 
   --animate-flash-up: flash-green 0.6s ease-out;
   --animate-flash-down: flash-red 0.6s ease-out;
+
+  /* Enhanced animations */
+  @keyframes flash-green-enhanced {
+    0% {
+      color: #10b981;
+      transform: scale(1);
+      opacity: 1;
+    }
+    25% {
+      color: #10b981;
+      transform: scale(1.05);
+      opacity: 1;
+    }
+    50% {
+      color: #10b981;
+      transform: scale(1);
+      opacity: 1;
+    }
+    75% {
+      color: #10b981;
+      transform: scale(1.02);
+      opacity: 0.8;
+    }
+    100% {
+      color: inherit;
+      transform: scale(1);
+      opacity: 1;
+    }
+  }
+
+  @keyframes flash-red-enhanced {
+    0% {
+      color: #f43f5e;
+      transform: scale(1);
+      opacity: 1;
+    }
+    25% {
+      color: #f43f5e;
+      transform: scale(1.05);
+      opacity: 1;
+    }
+    50% {
+      color: #f43f5e;
+      transform: scale(1);
+      opacity: 1;
+    }
+    75% {
+      color: #f43f5e;
+      transform: scale(1.02);
+      opacity: 0.8;
+    }
+    100% {
+      color: inherit;
+      transform: scale(1);
+      opacity: 1;
+    }
+  }
+
+  @keyframes pulse {
+    0% {
+      transform: scale(1);
+    }
+    50% {
+      transform: scale(1.02);
+    }
+    100% {
+      transform: scale(1);
+    }
+  }
+
+  @keyframes slide-up {
+    0% {
+      transform: translateY(10px);
+      opacity: 0;
+    }
+    100% {
+      transform: translateY(0);
+      opacity: 1;
+    }
+  }
+
+  @keyframes slide-down {
+    0% {
+      transform: translateY(-10px);
+      opacity: 0;
+    }
+    100% {
+      transform: translateY(0);
+      opacity: 1;
+    }
+  }
+
+  --animate-flash-up-enhanced: flash-green-enhanced 0.8s ease-out;
+  --animate-flash-down-enhanced: flash-red-enhanced 0.8s ease-out;
+  --animate-pulse-slow: pulse 2s infinite;
+  --animate-slide-up: slide-up 0.3s ease-out;
+  --animate-slide-down: slide-down 0.3s ease-out;
 }
 
 @media (prefers-color-scheme: dark) {
