@@ -1,19 +1,64 @@
-import TokenCard from "@/components/TokenCard";
+"use client";
 
-export default function Home() {
-  // Define supported coins with their details
-  const coins = [
-    { symbol: "BTCUSDT", name: "Bitcoin", icon: "₿" },
-    { symbol: "ETHUSDT", name: "Ethereum", icon: "Ξ" },
-    { symbol: "SOLUSDT", name: "Solana", icon: "☀️" },
-    { symbol: "BNBUSDT", name: "Binance Coin", icon: "BNB" },
-    { symbol: "XRPUSDT", name: "Ripple", icon: "✕" },
-    { symbol: "ADAUSDT", name: "Cardano", icon: "₳" },
-    { symbol: "DOTUSDT", name: "Polkadot", icon: "●" },
-    { symbol: "DOGEUSDT", name: "Dogecoin", icon: "Ð" },
-    { symbol: "AVAXUSDT", name: "Avalanche", icon: "A" },
-    { symbol: "MATICUSDT", name: "Polygon", icon: "M" },
-  ];
+import { useCallback, useState } from "react";
+
+import TokenCard from "@/components/TokenCard";
+import { usePriceDataStream } from "@/hooks/usePriceDataStream";
+import { SupportedCoins } from "@/types/tokensEnum";
+
+const COINS_LIST = [
+  SupportedCoins.BTCUSDT,
+  SupportedCoins.ETHUSDT,
+  SupportedCoins.SOLUSDT,
+  SupportedCoins.BNBUSDT,
+  SupportedCoins.XRPUSDT,
+  SupportedCoins.ADAUSDT,
+  SupportedCoins.DOTUSDT,
+  SupportedCoins.DOGEUSDT,
+  SupportedCoins.AVAXUSDT,
+  SupportedCoins.MATICUSDT,
+];
+
+const coins = [
+  { symbol: SupportedCoins.BTCUSDT, name: "Bitcoin", icon: "₿" },
+  { symbol: SupportedCoins.ETHUSDT, name: "Ethereum", icon: "Ξ" },
+  { symbol: SupportedCoins.SOLUSDT, name: "Solana", icon: "☀️" },
+  { symbol: SupportedCoins.BNBUSDT, name: "Binance Coin", icon: "BNB" },
+  { symbol: SupportedCoins.XRPUSDT, name: "Ripple", icon: "✕" },
+  { symbol: SupportedCoins.ADAUSDT, name: "Cardano", icon: "₳" },
+  { symbol: SupportedCoins.DOTUSDT, name: "Polkadot", icon: "●" },
+  { symbol: SupportedCoins.DOGEUSDT, name: "Dogecoin", icon: "Ð" },
+  { symbol: SupportedCoins.AVAXUSDT, name: "Avalanche", icon: "A" },
+  { symbol: SupportedCoins.MATICUSDT, name: "Polygon", icon: "M" },
+];
+
+function Home() {
+  const { data, loading, error } = usePriceDataStream(COINS_LIST);
+
+  const renderTokenCard = useCallback(
+    () =>
+      coins.map((i) => {
+        const extractedData = data[i.symbol];
+
+        if (extractedData) {
+          return (
+            <TokenCard
+              key={extractedData.symbol}
+              symbol={extractedData.symbol}
+              name={i.name}
+              icon={i.icon}
+              price={extractedData.price}
+              priceChangePercent={extractedData.priceChangePercent}
+              priceChangeDirection={extractedData.priceChangeDirection}
+              loading={loading}
+              error={error}
+            />
+          );
+        }
+        return null;
+      }),
+    [data, error, loading],
+  );
 
   return (
     <div className="space-y-6">
@@ -27,15 +72,10 @@ export default function Home() {
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
-        {coins.map((coin) => (
-          <TokenCard 
-            key={coin.symbol} 
-            symbol={coin.symbol} 
-            name={coin.name} 
-            icon={coin.icon} 
-          />
-        ))}
+        {renderTokenCard()}
       </div>
     </div>
   );
 }
+
+export default Home;

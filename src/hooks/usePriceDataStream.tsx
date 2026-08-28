@@ -1,12 +1,14 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useMemo } from "react";
+
+import { ResponseDataType } from "@/types/binanceApiTypes";
 
 export interface CryptoData {
   symbol: string;
   price: string;
-  isUp: "+" | "-" | "=";
-  timestamp: number;
+  priceChangeDirection: "+" | "-" | "=";
+  priceChangePercent: string;
 }
 
 export interface PriceDataStreamState {
@@ -16,59 +18,24 @@ export interface PriceDataStreamState {
 }
 
 const MAX_RETRY_DELAY = 15000;
-const HEARTBEAT_INTERVAL = 30000;
 
-// Available cryptocurrencies to track (you can extend this list)
-export const SUPPORTED_COINS = [
-  "BTCUSDT",
-  "ETHUSDT",
-  "SOLUSDT",
-  "BNBUSDT",
-  "XRPUSDT",
-  "ADAUSDT",
-  "DOTUSDT",
-  "DOGEUSDT",
-  "AVAXUSDT",
-  "MATICUSDT",
-];
-
-export function usePriceDataStream(symbols: string[] = ["BTCUSDT", "ETHUSDT"]) {
+export function usePriceDataStream(symbols: string[]) {
   const [state, setState] = useState<PriceDataStreamState>({
     data: {},
     loading: true,
     error: null,
   });
 
-  // Memoized update function without dependency on state.data to prevent infinite loops
-  const updateData = useCallback(
-    (symbol: string, price: string, isUp: "+" | "-" | "=") => {
-      setState((prev) => {
-        return {
-          ...prev,
-          data: {
-            ...prev.data,
-            [symbol]: {
-              symbol,
-              price,
-              isUp,
-              timestamp: Date.now(),
-            },
-          },
-          loading: false,
-        };
-      });
-    },
-    [],
-  );
+  const symbolsKey = useMemo(() => symbols.join(","), [symbols]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  const symbolsSet = useMemo(() => new Set(symbols), [symbolsKey]);
 
   useEffect(() => {
     let disposed = false;
     let ws: WebSocket | null = null;
     let retry = 0;
     let reconnectTimer: ReturnType<typeof setTimeout> | null = null;
-    let heartbeatTimer: ReturnType<typeof setInterval> | null = null;
 
-    // Create a single connection for multiple symbols using the 'combined' stream via request method
     const url = `wss://stream.binance.com:9443/stream`;
 
     const connect = () => {
@@ -76,11 +43,10 @@ export function usePriceDataStream(symbols: string[] = ["BTCUSDT", "ETHUSDT"]) {
 
       try {
         ws = new WebSocket(url);
-      } catch (error) {
-        console.log("Failed to create WebSocket:", error);
+      } catch (e) {
         setState((prev) => ({
           ...prev,
-          error: "Failed to create WebSocket connection",
+          error: `Failed to create WebSocket connection: ${e}`,
         }));
         return;
       }
@@ -91,7 +57,6 @@ export function usePriceDataStream(symbols: string[] = ["BTCUSDT", "ETHUSDT"]) {
         retry = 0;
         setState((prev) => ({ ...prev, error: null }));
 
-        // Send SUBSCRIBE request with windowSize=1h
         const subscribeMessage = {
           method: "SUBSCRIBE",
           params: [`!ticker_1h@arr`],
@@ -100,86 +65,69 @@ export function usePriceDataStream(symbols: string[] = ["BTCUSDT", "ETHUSDT"]) {
 
         try {
           ws?.send(JSON.stringify(subscribeMessage));
-        } catch (error) {
-          console.log("Subscribe send error:", error);
+        } catch (e) {
           setState((prev) => ({
             ...prev,
-            error: "Failed to send subscription request",
+            error: `Failed to send subscription request: ${e}`,
           }));
         }
-
-        // Send heartbeat to keep connection alive
-        if (heartbeatTimer) clearInterval(heartbeatTimer);
-        heartbeatTimer = setInterval(() => {
-          if (!disposed && ws && ws.readyState === WebSocket.OPEN) {
-            try {
-              // Send a ping message to keep the connection alive
-              ws.send('{"ping":true}');
-            } catch (error) {
-              console.log("Heartbeat send error:", error);
-            }
-          }
-        }, HEARTBEAT_INTERVAL);
       };
 
       ws.onmessage = (event) => {
         try {
           const data = JSON.parse(event.data);
-          console.log("data in stream", data);
 
-          // Handle ping response
-          if (data.ping) return;
-
-          // Process array of ticker data
           if (Array.isArray(data.data)) {
-            data.data.forEach((ticker: any) => {
-              if (ticker.s && ticker.c) {
+            data.data.forEach((ticker: ResponseDataType) => {
+              if (ticker.s && typeof ticker.c === "string" && ticker.c !== "") {
                 const symbol = ticker.s;
                 const price = ticker.c;
+                const priceChangePercent = ticker.P;
 
-                // Only process supported symbols
-                if (symbols.includes(symbol)) {
-                  // We need to access the latest state values inside this closure
-                  // Use a separate function that gets current data from state
+                if (symbolsSet.has(symbol)) {
                   setState((prev) => {
-                    const prevData = prev.data;
-                    // For the first update, initialize with current price
-                    if (!prevData[symbol]) {
-                      updateData(symbol, price, "=");
-                    } else {
-                      const prevPrice = parseFloat(prevData[symbol].price);
-                      const currPrice = parseFloat(price);
-                      const isUp =
-                        currPrice > prevPrice
+                    const prevEntry = prev.data[symbol];
+                    const prevPrice = prevEntry
+                      ? parseFloat(prevEntry.price)
+                      : NaN;
+                    const currPrice = parseFloat(price);
+                    const priceChangeDirection =
+                      !prevEntry || Number.isNaN(currPrice)
+                        ? "="
+                        : currPrice > prevPrice
                           ? "+"
                           : currPrice < prevPrice
                             ? "-"
                             : "=";
-                      updateData(symbol, price, isUp);
-                    }
-                    return prev; // Return unchanged state to avoid infinite loop issues
+                    return {
+                      ...prev,
+                      data: {
+                        ...prev.data,
+                        [symbol]: {
+                          symbol,
+                          price,
+                          priceChangeDirection,
+                          priceChangePercent,
+                        },
+                      },
+                      loading: false,
+                    };
                   });
                 }
               }
             });
-          }
-          // Handle subscription confirmation response
-          else if (data.result === null && data.id) {
-            // Subscription confirmed, we can start processing data
+          } else if (data.result === null && data.id) {
             setState((prev) => ({ ...prev, loading: false }));
           }
-        } catch (error) {
-          console.log("WebSocket data parsing error:", error);
+        } catch (e) {
           setState((prev) => ({
             ...prev,
-            error: "Failed to parse data from Binance API",
+            error: `Failed to parse data from Binance API: ${e}`,
           }));
         }
       };
 
-      ws.onerror = (event) => {
-        // The 'error' parameter in WebSocket onerror is an Event object, not an error message
-        console.log("WebSocket error occurred:", event);
+      ws.onerror = () => {
         setState((prev) => ({
           ...prev,
           error: "WebSocket connection error occurred",
@@ -187,13 +135,9 @@ export function usePriceDataStream(symbols: string[] = ["BTCUSDT", "ETHUSDT"]) {
       };
 
       ws.onclose = () => {
-        if (heartbeatTimer) clearInterval(heartbeatTimer);
-
         if (disposed) return;
 
-        // Exponential backoff: 1s, 2s, 4s... max 15s
         const delay = Math.min(1000 * 2 ** retry++, MAX_RETRY_DELAY);
-        console.log(`Reconnecting in ${delay}ms`);
         reconnectTimer = setTimeout(connect, delay);
       };
     };
@@ -203,7 +147,6 @@ export function usePriceDataStream(symbols: string[] = ["BTCUSDT", "ETHUSDT"]) {
     return () => {
       disposed = true;
       if (reconnectTimer !== null) clearTimeout(reconnectTimer);
-      if (heartbeatTimer !== null) clearInterval(heartbeatTimer);
       if (
         ws &&
         (ws.readyState === WebSocket.OPEN ||
@@ -212,7 +155,7 @@ export function usePriceDataStream(symbols: string[] = ["BTCUSDT", "ETHUSDT"]) {
         ws.close();
       }
     };
-  }, [symbols]); // Removed state.data and updateData from dependency array to prevent infinite loops
+  }, [symbolsKey, symbolsSet]);
 
   return state;
 }
