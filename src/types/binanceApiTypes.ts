@@ -22,3 +22,9 @@ export type BinanceCombinedStreamResponseType = {
   stream: string; // !ticker_1h@arr
   data: ResponseDataType[];
 };
+
+export enum TickerWindows {
+  "1h" = "1h",
+  "4h" = "4h",
+  "1d" = "1d",
+}

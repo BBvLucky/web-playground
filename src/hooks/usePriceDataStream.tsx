@@ -2,12 +2,11 @@
 
 import { useEffect, useState, useMemo } from "react";
 
-import { ResponseDataType } from "@/types/binanceApiTypes";
+import { ResponseDataType, TickerWindows } from "@/types/binanceApiTypes";
 
 export interface CryptoData {
   symbol: string;
   price: string;
-  priceChangeDirection: "+" | "-" | "=";
   priceChangePercent: string;
 }
 
@@ -19,7 +18,10 @@ export interface PriceDataStreamState {
 
 const MAX_RETRY_DELAY = 15000;
 
-export function usePriceDataStream(symbols: string[]) {
+export function usePriceDataStream(
+  symbols: string[],
+  window: keyof typeof TickerWindows = "1h",
+) {
   const [state, setState] = useState<PriceDataStreamState>({
     data: {},
     loading: true,
@@ -59,7 +61,7 @@ export function usePriceDataStream(symbols: string[]) {
 
         const subscribeMessage = {
           method: "SUBSCRIBE",
-          params: [`!ticker_1h@arr`],
+          params: [`!ticker_${window}@arr`],
           id: "1",
         };
 
@@ -86,19 +88,6 @@ export function usePriceDataStream(symbols: string[]) {
 
                 if (symbolsSet.has(symbol)) {
                   setState((prev) => {
-                    const prevEntry = prev.data[symbol];
-                    const prevPrice = prevEntry
-                      ? parseFloat(prevEntry.price)
-                      : NaN;
-                    const currPrice = parseFloat(price);
-                    const priceChangeDirection =
-                      !prevEntry || Number.isNaN(currPrice)
-                        ? "="
-                        : currPrice > prevPrice
-                          ? "+"
-                          : currPrice < prevPrice
-                            ? "-"
-                            : "=";
                     return {
                       ...prev,
                       data: {
@@ -106,7 +95,6 @@ export function usePriceDataStream(symbols: string[]) {
                         [symbol]: {
                           symbol,
                           price,
-                          priceChangeDirection,
                           priceChangePercent,
                         },
                       },
@@ -155,7 +143,7 @@ export function usePriceDataStream(symbols: string[]) {
         ws.close();
       }
     };
-  }, [symbolsKey, symbolsSet]);
+  }, [symbolsKey, symbolsSet, window]);
 
   return state;
 }

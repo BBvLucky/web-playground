@@ -1,12 +1,13 @@
 "use client";
 
-import { memo } from "react";
+import { memo, useCallback, useMemo } from "react";
 
 import type { CryptoData } from "@/hooks/usePriceDataStream";
+import { TickerWindows } from "@/types/binanceApiTypes";
 
 interface Props extends Pick<
   CryptoData,
-  "price" | "priceChangePercent" | "priceChangeDirection" | "symbol"
+  "price" | "priceChangePercent" | "symbol"
 > {
   name: string;
   icon: string;
@@ -14,11 +15,10 @@ interface Props extends Pick<
   error: string | null;
 }
 
-const ANIMATION_CLASS: Record<Props["priceChangeDirection"], string> = {
-  "+": "animate-flash-up",
-  "-": "animate-flash-down",
-  "=": "",
-};
+interface TickerWindowChangeButton {
+  id: TickerWindows;
+  label: string;
+}
 
 function TokenCard({
   symbol,
@@ -28,10 +28,57 @@ function TokenCard({
   error,
   price,
   priceChangePercent,
-  priceChangeDirection,
 }: Props) {
-  // Show loading state or error
-  if (loading) {
+  const isUp = useMemo(
+    () => Number(priceChangePercent) > 0,
+    [priceChangePercent],
+  );
+  const animationClass = useMemo(
+    () => (isUp ? "animate-flash-up" : "animate-flash-down"),
+    [isUp],
+  );
+  const textColor = useMemo(
+    () => (isUp ? "text-(--up-green)" : "text-(--down-red)"),
+    [isUp],
+  );
+
+  const buttons = useMemo<TickerWindowChangeButton[]>(
+    () => [
+      { id: TickerWindows["1h"], label: "1h" },
+      { id: TickerWindows["4h"], label: "4h" },
+      { id: TickerWindows["1d"], label: "1d" },
+    ],
+    [],
+  );
+
+  const isActive = false;
+
+  const renderButtons = useCallback(
+    () => (
+      <div className="flex row-auto gap-1">
+        {buttons.map((i) => (
+          <button
+            key={i.id}
+            className={`
+            px-1 flex items-center justify-center rounded-lg font-semibold text-xs transition-all duration-200 border
+            active:scale-95
+            disabled:opacity-40 disabled:cursor-not-allowed disabled:pointer-events-none
+            ${
+              isActive
+                ? "bg-blue-600 text-white shadow-lg shadow-blue-500/30"
+                : "text-slate-400 hover:bg-slate-700 hover:text-slate-200"
+            }
+            `}
+          >
+            {i.label}
+          </button>
+        ))}
+      </div>
+    ),
+    [buttons, isActive],
+  );
+
+  if (loading || !symbol || !name || !icon) {
     return (
       <div className="bg-bg-card border border-neutral-200 dark:border-neutral-800 p-5 rounded-xl shadow-sm flex flex-col gap-4 animate-shimmer">
         <div className="flex items-center justify-between">
@@ -90,24 +137,18 @@ function TokenCard({
           </div>
         </div>
       </div>
-
       <div>
         <div className="font-black font-mono flex justify-between items-center">
           <span
             key={price}
-            className={`text-2xl font-black font-mono tracking-tight inline-block ${ANIMATION_CLASS[priceChangeDirection]}`}
+            className={`text-2xl font-black font-mono tracking-tight inline-block ${animationClass}`}
           >
             ${Number(price).toFixed(2)}
           </span>
-          <span
-            className={
-              Number(priceChangePercent) > 0
-                ? "text-(--up-green)"
-                : "text-(--down-red)"
-            }
-          >
-            {priceChangePercent}%
-          </span>
+          <div className="flex row-auto justify-between gap-3 grow-0">
+            {renderButtons()}
+            <span className={textColor}>{priceChangePercent}%</span>
+          </div>
         </div>
         <span className="text-[10px] text-neutral-400 block mt-0.5">
           в реальном времени

@@ -16,7 +16,6 @@ const COINS_LIST = [
   SupportedCoins.DOTUSDT,
   SupportedCoins.DOGEUSDT,
   SupportedCoins.AVAXUSDT,
-  SupportedCoins.MATICUSDT,
 ];
 
 const coins = [
@@ -29,7 +28,6 @@ const coins = [
   { symbol: SupportedCoins.DOTUSDT, name: "Polkadot", icon: "●" },
   { symbol: SupportedCoins.DOGEUSDT, name: "Dogecoin", icon: "Ð" },
   { symbol: SupportedCoins.AVAXUSDT, name: "Avalanche", icon: "A" },
-  { symbol: SupportedCoins.MATICUSDT, name: "Polygon", icon: "M" },
 ];
 
 function Home() {
@@ -38,24 +36,20 @@ function Home() {
   const renderTokenCard = useCallback(
     () =>
       coins.map((i) => {
-        const extractedData = data[i.symbol];
+        const extractedData = data[i.symbol] || {};
 
-        if (extractedData) {
-          return (
-            <TokenCard
-              key={extractedData.symbol}
-              symbol={extractedData.symbol}
-              name={i.name}
-              icon={i.icon}
-              price={extractedData.price}
-              priceChangePercent={extractedData.priceChangePercent}
-              priceChangeDirection={extractedData.priceChangeDirection}
-              loading={loading}
-              error={error}
-            />
-          );
-        }
-        return null;
+        return (
+          <TokenCard
+            key={i.symbol}
+            symbol={extractedData?.symbol}
+            name={i.name}
+            icon={i.icon}
+            price={extractedData?.price}
+            priceChangePercent={extractedData?.priceChangePercent}
+            loading={loading}
+            error={error}
+          />
+        );
       }),
     [data, error, loading],
   );
