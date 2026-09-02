@@ -1,10 +1,11 @@
 "use client";
 
-import { useCallback } from "react";
+import { useCallback, useState } from "react";
 
 import TokenCard from "@/components/TokenCard";
 import { usePriceDataStream } from "@/hooks/usePriceDataStream";
 import { SupportedCoins } from "@/types/tokensEnum";
+import { TickerWindows } from "@/types/binanceApiTypes";
 
 const COINS_LIST = [
   SupportedCoins.BTCUSDT,
@@ -31,7 +32,11 @@ const coins = [
 ];
 
 function Home() {
-  const { data, loading, error } = usePriceDataStream(COINS_LIST);
+  const [window, setWindow] = useState<TickerWindows>("1d");
+  const { data, loading, error, connectionStatus } = usePriceDataStream(
+    COINS_LIST,
+    window,
+  );
 
   const renderTokenCard = useCallback(
     () =>
@@ -48,10 +53,13 @@ function Home() {
             priceChangePercent={extractedData?.priceChangePercent}
             loading={loading}
             error={error}
+            onChangeWindow={setWindow}
+            window={window}
+            connectionStatus={connectionStatus}
           />
         );
       }),
-    [data, error, loading],
+    [data, error, loading, connectionStatus, window],
   );
 
   return (

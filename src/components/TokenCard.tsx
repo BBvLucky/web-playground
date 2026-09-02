@@ -2,10 +2,10 @@
 
 import { memo, useCallback, useMemo } from "react";
 
-import type { CryptoData } from "@/hooks/usePriceDataStream";
+import type { ConnectionStatus, CryptoData } from "@/hooks/usePriceDataStream";
 import { TickerWindows } from "@/types/binanceApiTypes";
 
-interface Props extends Pick<
+interface TokenCardProps extends Pick<
   CryptoData,
   "price" | "priceChangePercent" | "symbol"
 > {
@@ -13,6 +13,9 @@ interface Props extends Pick<
   icon: string;
   loading: boolean;
   error: string | null;
+  window: TickerWindows;
+  onChangeWindow: (id: TickerWindows) => void;
+  connectionStatus: ConnectionStatus;
 }
 
 interface TickerWindowChangeButton {
@@ -28,7 +31,10 @@ function TokenCard({
   error,
   price,
   priceChangePercent,
-}: Props) {
+  window,
+  onChangeWindow,
+  connectionStatus,
+}: TokenCardProps) {
   const isUp = useMemo(
     () => Number(priceChangePercent) > 0,
     [priceChangePercent],
@@ -44,18 +50,16 @@ function TokenCard({
 
   const buttons = useMemo<TickerWindowChangeButton[]>(
     () => [
-      { id: TickerWindows["1h"], label: "1h" },
-      { id: TickerWindows["4h"], label: "4h" },
-      { id: TickerWindows["1d"], label: "1d" },
+      { id: "1h", label: "1h" },
+      { id: "4h", label: "4h" },
+      { id: "1d", label: "1d" },
     ],
     [],
   );
 
-  const isActive = false;
-
   const renderButtons = useCallback(
     () => (
-      <div className="flex row-auto gap-1">
+      <div className="flex row-auto gap-1 grow-0">
         {buttons.map((i) => (
           <button
             key={i.id}
@@ -64,21 +68,29 @@ function TokenCard({
             active:scale-95
             disabled:opacity-40 disabled:cursor-not-allowed disabled:pointer-events-none
             ${
-              isActive
-                ? "bg-blue-600 text-white shadow-lg shadow-blue-500/30"
+              i.id === window
+                ? "bg-white text-slate-700 shadow-lg"
                 : "text-slate-400 hover:bg-slate-700 hover:text-slate-200"
             }
             `}
+            onClick={() => onChangeWindow(i.id)}
+            disabled={loading || connectionStatus !== "connected"}
           >
             {i.label}
           </button>
         ))}
       </div>
     ),
-    [buttons, isActive],
+    [buttons, onChangeWindow, window, connectionStatus, loading],
   );
 
-  if (loading || !symbol || !name || !icon) {
+  if (
+    loading ||
+    !symbol ||
+    !name ||
+    !icon ||
+    connectionStatus !== "connected"
+  ) {
     return (
       <div className="bg-bg-card border border-neutral-200 dark:border-neutral-800 p-5 rounded-xl shadow-sm flex flex-col gap-4 animate-shimmer">
         <div className="flex items-center justify-between">
@@ -90,8 +102,12 @@ function TokenCard({
             </div>
           </div>
         </div>
-        <div>
+        <div className="flex row-auto justify-between items-center">
           <span className="text-2xl font-black font-mono tracking-tight inline-block h-8 bg-gray-300 dark:bg-gray-700 rounded w-24"></span>
+          <div className="flex row-auto justify-between gap-3 grow-0">
+            {renderButtons()}
+            <span className="font-black font-mono tracking-tight inline-block bg-gray-300 dark:bg-gray-700 rounded w-24"></span>
+          </div>
         </div>
       </div>
     );
