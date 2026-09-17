@@ -3,6 +3,7 @@
 import { useCallback } from "react";
 
 import Input from "@/components/Input";
+import ErrorAlert from "@/components/ErrorAlert";
 import { useAuth } from "@/hooks/useAuth";
 import { MIN_PASSWORD_LENGTH } from "@/consts";
 
@@ -28,6 +29,7 @@ export default function RegisterPage() {
   return (
     <div className="max-w-sm mx-auto p-8">
       <h1>Авторизация</h1>
+      {formError && <ErrorAlert message={formError} />}
       <form onSubmit={handleSubmit} className="space-y-4">
         <Input
           type="email"

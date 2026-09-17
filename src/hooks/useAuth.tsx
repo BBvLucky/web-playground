@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 
 import { createClient } from "@/lib/supabase/client";
+import { getUserFriendlyError } from "@/lib/authErrorMessages";
 import {
   validateEmail,
   validatePassword,
@@ -59,7 +60,8 @@ export function useAuth(mode: "login" | "register") {
         }));
 
     if (error) {
-      setFormError(error.message);
+      const userFriendlyError = getUserFriendlyError(error);
+      setFormError(userFriendlyError);
       setLoading(false);
       return;
     }
