@@ -3,11 +3,12 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 
 import { useGetUserProvider } from "@/providers/useGetUserProvider";
+import { createClient } from "@/lib/supabase/client";
 
 import DropdownItem from "./DropdownItem";
 import DropdownDivider from "./DropdownDivider";
 import DropdownSectionTitle from "./DropdownSectionTitle";
-import { createClient } from "@/lib/supabase/client";
+import ThemeToggler from "./ThemeToggler";
 
 function Dropdown() {
   const [open, setOpen] = useState(false);
@@ -92,10 +93,8 @@ function Dropdown() {
 
           <DropdownDivider />
 
-          {/* заглушка: смена темы */}
-          <div className="px-3 py-1.5 text-xs text-neutral-400 italic">
-            Theme changing
-          </div>
+          <DropdownSectionTitle>Appearance</DropdownSectionTitle>
+          <ThemeToggler />
         </div>
       )}
     </div>

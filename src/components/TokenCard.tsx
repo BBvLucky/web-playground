@@ -84,13 +84,7 @@ function TokenCard({
     [buttons, onChangeWindow, window, connectionStatus, loading],
   );
 
-  if (
-    loading ||
-    !symbol ||
-    !name ||
-    !icon ||
-    connectionStatus !== "connected"
-  ) {
+  if (loading || !symbol || !name || !icon) {
     return (
       <div className="bg-bg-card border border-neutral-200 dark:border-neutral-800 p-5 rounded-xl shadow-sm flex flex-col gap-4 animate-shimmer">
         <div className="flex items-center justify-between">
