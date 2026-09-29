@@ -1,8 +1,15 @@
 import { type NextRequest } from "next/server";
+import { createProxy } from "next-i18next/proxy";
 import { updateSession } from "@/utils/supabase/middleware";
 
+import i18nConfig from "./i18n.config";
+
+const i18nProxy = createProxy(i18nConfig);
+
 export async function proxy(request: NextRequest) {
-  return await updateSession(request);
+  const i18nResponse = await i18nProxy(request);
+
+  return await updateSession(request, i18nResponse);
 }
 
 export const config = {
