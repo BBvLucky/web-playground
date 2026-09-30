@@ -2,5 +2,20 @@
   "media": {
     "name": "Криптохрень",
     "description": "Очередной бесполезный дашборд"
+  },
+  "dropdown": {
+    "language": "Язык",
+    "appearance": "Тема",
+    "profile": "Профиль",
+    "account": "Аккаунт",
+    "settings": "Настройки",
+    "currency": "Валюта"
+  },
+  "authorization": {
+    "signIn": "Войти",
+    "signUp": "Зарегистрироваться",
+    "signOut": "Выйти",
+    "login": "Логин",
+    "password": "Пароль"
   }
 }

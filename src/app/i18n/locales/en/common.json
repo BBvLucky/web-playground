@@ -2,5 +2,20 @@
   "media": {
     "name": "Cryptocrap",
     "description": "Yet another useless dashboard"
+  },
+  "dropdown": {
+    "language": "Language",
+    "appearance": "Appearance",
+    "profile": "Profile",
+    "account": "Account",
+    "settings": "Settings",
+    "currency": "Currency"
+  },
+  "authorization": {
+    "signIn": "Sign In",
+    "signUp": "Sign Up",
+    "signOut": "Sign Out",
+    "login": "Login",
+    "password": "Password"
   }
 }

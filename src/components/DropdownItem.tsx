@@ -7,6 +7,7 @@ interface DropdownItemProps {
   href?: string;
   onClick?: () => void;
   children?: ReactNode;
+  labelFor?: string;
 }
 
 const baseClass =
@@ -18,12 +19,23 @@ function DropdownItem({
   href,
   onClick,
   children,
+  labelFor,
 }: DropdownItemProps) {
+  const label = labelFor ? (
+    <label htmlFor={labelFor} className="truncate cursor-pointer">
+      {title}
+    </label>
+  ) : (
+    <span className="truncate">{title}</span>
+  );
+
   const content = (
     <>
       <span className="flex items-center gap-3 min-w-0">
-        <span className="shrink-0">{icon}</span>
-        <span className="truncate">{title}</span>
+        <span aria-hidden="true" className="shrink-0">
+          {icon}
+        </span>
+        {label}
       </span>
       {children}
     </>

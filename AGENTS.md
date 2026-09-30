@@ -14,13 +14,13 @@
 npm run dev
 
 # Production build
-# npm run build
+npm run build
 
 # Start production server
-# npm run start
+npm run start
 
 # Run linter
-# npm run lint
+npm run lint
 ```
 
 ## Conventions

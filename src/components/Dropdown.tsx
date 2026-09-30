@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
+import { useT } from "next-i18next/client";
 
 import { useGetUserProvider } from "@/providers/useGetUserProvider";
 import { createClient } from "@/lib/supabase/client";
@@ -9,11 +10,13 @@ import DropdownItem from "./DropdownItem";
 import DropdownDivider from "./DropdownDivider";
 import DropdownSectionTitle from "./DropdownSectionTitle";
 import ThemeToggler from "./ThemeToggler";
+import DropdownLangSwitcher from "./DropdownLangSwitcher";
 
 function Dropdown() {
   const [open, setOpen] = useState(false);
   const rootRef = useRef<HTMLDivElement>(null);
   const { user, loading } = useGetUserProvider();
+  const { t } = useT("common");
 
   useEffect(() => {
     function onMouseDown(event: MouseEvent) {
@@ -47,7 +50,7 @@ function Dropdown() {
       >
         <span>👤</span>
         <span className="hidden md:block max-w-40 truncate">
-          {email ?? "Profile"}
+          {email ?? t("dropdown.profile")}
         </span>
         <span
           className="text-xs text-neutral-400 transition-transform duration-200"
@@ -59,23 +62,27 @@ function Dropdown() {
 
       {open && (
         <div className="absolute right-0 mt-2 w-64 bg-bg-card border border-neutral-200 dark:border-neutral-800 rounded-xl shadow-xl p-2 flex flex-col gap-1 animate-in fade-in slide-in-from-top-2 duration-150">
-          <DropdownSectionTitle>Account</DropdownSectionTitle>
+          <DropdownSectionTitle>{t("dropdown.account")}</DropdownSectionTitle>
           {loading ? (
             <div className="px-3 py-2 text-sm text-neutral-400 italic">…</div>
           ) : user ? (
-            <DropdownItem icon="🚪" title="Sign out" onClick={handleSignOut} />
+            <DropdownItem
+              icon="🚪"
+              title={t("authorization.signOut")}
+              onClick={handleSignOut}
+            />
           ) : (
             <DropdownItem
               icon="🔑"
-              title="Login / Signup"
+              title={`${t("authorization.signIn")} / ${t("authorization.signUp")}`}
               href="/registration"
             />
           )}
 
           <DropdownDivider />
 
-          <DropdownSectionTitle>Settings</DropdownSectionTitle>
-          <DropdownItem icon="💵" title="Currency">
+          <DropdownSectionTitle>{t("dropdown.settings")}</DropdownSectionTitle>
+          <DropdownItem icon="💵" title={t("dropdown.currency")}>
             {/* заглушка */}
             <select className="bg-background border border-neutral-300 dark:border-neutral-800 text-xs rounded px-1.5 py-0.5 focus:outline-none">
               <option value="USD">USD ($)</option>
@@ -83,17 +90,19 @@ function Dropdown() {
               <option value="RUB">RUB (₽)</option>
             </select>
           </DropdownItem>
-          <DropdownItem icon="🌐" title="Language">
-            {/* заглушка */}
-            <select className="bg-background border border-neutral-300 dark:border-neutral-800 text-xs rounded px-1.5 py-0.5 focus:outline-none">
-              <option value="RU">Русский</option>
-              <option value="EN">English</option>
-            </select>
+          <DropdownItem
+            icon="🌐"
+            title={t("dropdown.language")}
+            labelFor="switchLang"
+          >
+            <DropdownLangSwitcher />
           </DropdownItem>
 
           <DropdownDivider />
 
-          <DropdownSectionTitle>Appearance</DropdownSectionTitle>
+          <DropdownSectionTitle>
+            {t("dropdown.appearance")}
+          </DropdownSectionTitle>
           <ThemeToggler />
         </div>
       )}
