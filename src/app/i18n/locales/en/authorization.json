@@ -7,5 +7,11 @@
     "registerButton": "Register",
     "alreadyHaveAccount": "Already have an account? ",
     "loginLink": "Log in"
+  },
+  "authorization": {
+    "title": "Authorization",
+    "emailPlaceholder": "Email",
+    "passwordPlaceholder": "Password",
+    "loginButton": "Sign In"
   }
 }

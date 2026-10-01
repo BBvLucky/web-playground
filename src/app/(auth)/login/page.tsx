@@ -1,6 +1,8 @@
 "use client";
 
 import { useCallback } from "react";
+import Link from "next/link";
+import { useT } from "next-i18next/client";
 
 import Input from "@/components/Input";
 import ErrorAlert from "@/components/ErrorAlert";
@@ -8,6 +10,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { MIN_PASSWORD_LENGTH } from "@/consts";
 
 function LoginPage() {
+  const { t } = useT("authorization");
   const { errors, formError, values, loading, setField, handleSubmit } =
     useAuth("login");
 
@@ -28,12 +31,12 @@ function LoginPage() {
 
   return (
     <div className="max-w-sm mx-auto p-8">
-      <h1>Авторизация</h1>
+      <h1>{t("authorization.title")}</h1>
       {formError && <ErrorAlert message={formError} />}
       <form onSubmit={handleSubmit} className="space-y-4">
         <Input
           type="email"
-          placeholder="Email"
+          placeholder={t("authorization.emailPlaceholder")}
           value={values.email}
           onChange={handleEmailInput}
           error={errors.email}
@@ -41,7 +44,7 @@ function LoginPage() {
         />
         <Input
           type="password"
-          placeholder="Пароль"
+          placeholder={t("authorization.passwordPlaceholder")}
           value={values.password}
           onChange={handlePasswordInput}
           minLength={MIN_PASSWORD_LENGTH}
@@ -49,9 +52,16 @@ function LoginPage() {
           required
         />
         <button type="submit" disabled={isDisabled}>
-          Вход
+          {t("authorization.loginButton")}
         </button>
       </form>
+
+      <p className="mt-4 text-sm text-gray-600">
+        {t("registration.alreadyHaveAccount")}
+        <Link href="/registration" className="text-blue-600 hover:underline">
+          {t("registration.loginLink")}
+        </Link>
+      </p>
     </div>
   );
 }

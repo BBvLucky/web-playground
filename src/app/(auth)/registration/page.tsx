@@ -37,7 +37,7 @@ function RegisterPage() {
 
   return (
     <div className="max-w-sm mx-auto p-8">
-      <h1>{t("")}</h1>
+      <h1>{t("registration.title")}</h1>
       {formError && <ErrorAlert message={formError} />}
       <form onSubmit={handleSubmit} className="space-y-4">
         <Input

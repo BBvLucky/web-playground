@@ -7,5 +7,11 @@
     "registerButton": "Зарегистрироваться",
     "alreadyHaveAccount": "Уже зарегистрированы? ",
     "loginLink": "Войти"
+  },
+  "authorization": {
+    "title": "Авторизация",
+    "emailPlaceholder": "Email",
+    "passwordPlaceholder": "Пароль",
+    "loginButton": "Войти"
   }
 }
