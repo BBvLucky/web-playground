@@ -1,0 +1,11 @@
+{
+  "registration": {
+    "title": "Registration",
+    "emailPlaceholder": "Email",
+    "passwordPlaceholder": "Password",
+    "confirmPasswordPlaceholder": "Confirm Password",
+    "registerButton": "Register",
+    "alreadyHaveAccount": "Already have an account? ",
+    "loginLink": "Log in"
+  }
+}

@@ -2,6 +2,7 @@
 
 import { useCallback } from "react";
 import Link from "next/link";
+import { useT } from "next-i18next/client";
 
 import Input from "@/components/Input";
 import ErrorAlert from "@/components/ErrorAlert";
@@ -9,6 +10,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { MIN_PASSWORD_LENGTH } from "@/consts";
 
 function RegisterPage() {
+  const { t } = useT("authorization");
   const { errors, formError, values, loading, setField, handleSubmit } =
     useAuth("register");
 
@@ -35,12 +37,12 @@ function RegisterPage() {
 
   return (
     <div className="max-w-sm mx-auto p-8">
-      <h1>Регистрация</h1>
+      <h1>{t("")}</h1>
       {formError && <ErrorAlert message={formError} />}
       <form onSubmit={handleSubmit} className="space-y-4">
         <Input
           type="email"
-          placeholder="Email"
+          placeholder={t("registration.emailPlaceholder")}
           value={values.email}
           onChange={handleEmailInput}
           error={errors.email}
@@ -48,7 +50,7 @@ function RegisterPage() {
         />
         <Input
           type="password"
-          placeholder="Пароль"
+          placeholder={t("registration.passwordPlaceholder")}
           value={values.password}
           onChange={handlePasswordInput}
           minLength={MIN_PASSWORD_LENGTH}
@@ -57,7 +59,7 @@ function RegisterPage() {
         />
         <Input
           type="password"
-          placeholder="Подтвердите пароль"
+          placeholder={t("registration.confirmPasswordPlaceholder")}
           value={values.confirm}
           onChange={handleConfirmInput}
           minLength={MIN_PASSWORD_LENGTH}
@@ -65,14 +67,14 @@ function RegisterPage() {
           required
         />
         <button type="submit" disabled={isDisabled}>
-          Зарегистрироваться
+          {t("registration.registerButton")}
         </button>
       </form>
 
       <p className="mt-4 text-sm text-gray-600">
-        Уже зарегистрированы?{" "}
+        {t("registration.alreadyHaveAccount")}
         <Link href="/login" className="text-blue-600 hover:underline">
-          Авторизуйтесь
+          {t("registration.loginLink")}
         </Link>
       </p>
     </div>

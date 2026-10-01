@@ -69,6 +69,17 @@ src/
 - Types and interfaces live in `src/types/`, never inlined in components.
 - Import via the `@/` alias (`@/*` → `./src/*`), not relative paths.
 - No global state manager; useState/custom hooks + Context for local features.
+- Declare components as named functions first, then export them separately. Never use `export default function`:
+
+  ```tsx
+  // ❌
+  export default function TokenCard() { ... }
+
+  // ✅
+  function TokenCard() { ... }
+  export default TokenCard;
+
+  ```
 
 ### File Naming
 
@@ -85,7 +96,18 @@ src/
 
 - Locales: `en` (fallback), `ru`. `localeInPath: false` — locale is NOT part of the URL; switching happens client-side.
 - New user-facing strings go through i18next namespaces; add keys to **both** `src/app/i18n/locales/en/*.json` and `.../ru/*.json`.
-- Existing auth pages still contain hardcoded Russian strings — migrate them to `t()` when touching those files.
+- A namespace is a **file**, not a key: the `common` namespace lives in `common.json`, an `auth` namespace would live in `auth.json`.
+- Top-level keys inside a file are translation keys of that namespace. Never nest a namespace inside another file:
+
+  ```jsonc
+  // ❌ there is no "registration" namespace here — these are just keys of common
+  { "login_title": "Login", "registration": { "title": "Register" } }
+
+  // ✅ registration is its own file: src/app/i18n/locales/en/registration.json
+  ```
+
+- New user-facing strings go into the common namespace unless a dedicated namespace already exists for that area. Creating a new namespace = adding {name}.json to both en/ and ru/. The resource loader in i18n.config.ts resolves namespaces by filename — there is no registry to update, and a missing file breaks the build for that locale.
+- Client components: `useT` from `next-i18next/client`. Server components, layouts, `generateMetadata`: `getT` from `next-i18next/server`. Never swap sides — mixing them breaks hydration.
 
 ## Auth Flow
 

@@ -1,0 +1,11 @@
+{
+  "registration": {
+    "title": "Регистрация",
+    "emailPlaceholder": "Email",
+    "passwordPlaceholder": "Пароль",
+    "confirmPasswordPlaceholder": "Подтвердите пароль",
+    "registerButton": "Зарегистрироваться",
+    "alreadyHaveAccount": "Уже зарегистрированы? ",
+    "loginLink": "Войти"
+  }
+}
