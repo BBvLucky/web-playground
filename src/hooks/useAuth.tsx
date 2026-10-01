@@ -5,11 +5,9 @@ import { useRouter } from "next/navigation";
 
 import { createClient } from "@/lib/supabase/client";
 import { getUserFriendlyError } from "@/lib/authErrorMessages";
-import {
-  validateEmail,
-  validatePassword,
-  validateConfirm,
-} from "@/lib/validators";
+import { validateEmail } from "@/utils/validators/validateEmail";
+import { validatePassword } from "@/utils/validators/validatePassword";
+import { validateConfirm } from "@/utils/validators/validateRepeatPassword";
 
 type Field = "email" | "password" | "confirm";
 type Errors = Record<Field, string | null>;

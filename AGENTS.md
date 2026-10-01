@@ -1,84 +1,123 @@
-# Stack
+# web-playground
 
-- **Framework**: Next.js 16.2.12 (App Router)
-- **Language**: TypeScript 5+
-- **React**: 19.2.4
-- **Styling**: Tailwind CSS v4
-- **Database/Backend**: Supabase (@supabase/ssr, @supabase/supabase-js)
-- **Linting**: ESLint 9 + eslint-config-next (core-web-vitals + typescript)
+Personal playground project: Next.js 16 (App Router) + Supabase auth + i18n (en/ru).
+
+## Stack
+
+| Layer     | Tech                                                                 |
+| --------- | -------------------------------------------------------------------- |
+| Framework | Next.js 16.2.12 (App Router, Turbopack)                              |
+| Language  | TypeScript 5, `strict: true`                                         |
+| UI        | React 19.2.4                                                         |
+| Styling   | Tailwind CSS v4 (`@tailwindcss/postcss`, CSS-first config)           |
+| Auth/DB   | Supabase — `@supabase/ssr` ^0.12.6, `@supabase/supabase-js` ^2.115.0 |
+| i18n      | next-i18next ^16.3.1, i18next ^26.4.2, react-i18next ^17.0.15        |
+| Linting   | ESLint 9 (flat config) + eslint-config-next                          |
 
 ## Commands
 
 ```bash
-# Development server
-npm run dev
+npm install            # install dependencies
+npm run dev            # dev server
+npm run build          # production build
+npm run start          # serve production build
+npm run lint           # eslint (whole project)
+npx tsc --noEmit       # type-check (no dedicated script)
+```
 
-# Production build
-npm run build
+There is no test runner installed. If tests are added, use Vitest.
 
-# Start production server
-npm run start
+## Setup
 
-# Run linter
-npm run lint
+```bash
+cp .env.example .env.local
+```
+
+Required env vars:
+
+- `NEXT_PUBLIC_SUPABASE_URL`
+- `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`
+
+## Project Structure
+
+```
+src/
+├── app/                  # App Router: pages, layouts, route groups
+│   ├── (auth)/           # Route group: /login, /registration
+│   └── i18n/locales/     # Translation JSON: {en,ru}/{namespace}.json
+├── components/           # Reusable UI (Input, ErrorAlert, Dropdown, Header, Sidebar, TokenCard)
+├── consts/               # Constants (e.g. MIN_PASSWORD_LENGTH)
+├── hooks/                # Custom hooks (useAuth, ...)
+├── lib/
+│   └── supabase/         # Supabase clients: client.ts (browser), server.ts (server)
+├── providers/            # React Context providers
+├── types/                # All shared TypeScript types/interfaces
+├── utils/
+│   └── supabase/         # middleware.ts — updateSession() auth guard
+├── proxy.ts              # Request entrypoint (Next 16 "middleware")
+├── i18n.config.ts        # next-i18next config
+├── layout.tsx
+└── page.tsx              # Home
 ```
 
 ## Conventions
 
-### Project Structure
+### Code Rules
 
-- `src/app/` — Next.js App Router pages и layout
-- `src/components/` — Reusable UI компоненты (Dropdown, Header, Sidebar, Input, TokenCard)
-- `src/hooks/` — Custom React hooks
-- `src/types/` — TypeScript типы
-- `src/lib/` — Утилитарные функции и библиотеки
-- `src/providers/` — React Context providers
-- `src/consts/` — Константы проекта
-- `src/utils/` — Вспомогательные утилиты
+- Server Components by default; `"use client"` only when needed (state, effects, browser APIs).
+- One component per file; logic over 50 lines moves to a hook in `src/hooks/use*.ts`.
+- Types and interfaces live in `src/types/`, never inlined in components.
+- Import via the `@/` alias (`@/*` → `./src/*`), not relative paths.
+- No global state manager; useState/custom hooks + Context for local features.
 
 ### File Naming
 
-- Компоненты: PascalCase (e.g., `Header.tsx`, `TokenCard.tsx`)
-- Типы: PascalCase с суффиксом `.ts` или внутри интерфейсов
-- Утилиты: camelCase
+- Components: PascalCase (`Header.tsx`).
+- Hooks: `usePascalCase.ts`.
+- Utilities and constants: camelCase.
+- Type files: PascalCase (`.ts`).
 
-### Code Rules
+### Styling
 
-- Server Components by default; `"use client"` только когда необходимо (state, effects, browser APIs)
-- Один компонент — один файл; логика >50 строк выносится в хук `src/hooks/use*.ts`
-- Типы и интерфейсы — в `src/types/`, не инлайнятся в компоненты
-- Импорт через алиас `@/` (проверь paths в tsconfig), не относительный
-<!-- TODO подумать над последней строкой -->
-- Глобальный стейт-менеджер запрещён; useState/hooks + Context для локальных фич
+- Tailwind v4 is configured in CSS, not `tailwind.config.js`. Custom design tokens go in `@theme` blocks in `src/app/global.css`. Do not create a `tailwind.config.*` file.
 
-### Auth Flow
+### i18n
 
-- Аутентификация через Supabase в папке `src/app/(auth)/`
-- Разделение на `login/` и `registration/` routes
+- Locales: `en` (fallback), `ru`. `localeInPath: false` — locale is NOT part of the URL; switching happens client-side.
+- New user-facing strings go through i18next namespaces; add keys to **both** `src/app/i18n/locales/en/*.json` and `.../ru/*.json`.
+- Existing auth pages still contain hardcoded Russian strings — migrate them to `t()` when touching those files.
 
-## Off limits
+## Auth Flow
 
-- Не модифицировать файлы в `.next/`, `out/`, `build/`, `.env*`
-- Не удалять `node_modules` вручную (использовать npm/yarn)
-- Не менять `next.config.*` без понимания impact'а на сборку
-- Не нарушать структуру папок `src/app/(auth)/`
-- Не редактировать применённые миграции в `supabase/migrations/`; новые — только через CLI
-- Не коммитить ручные правки `package-lock.json`
+- Pages: `src/app/(auth)/login/page.tsx`, `registration/page.tsx` (client components using `useAuth("login" | "register")`).
+- Clients:
+  - Browser: `createClient()` from `@/lib/supabase/client` — sync, for client components.
+  - Server: `await createClient()` from `@/lib/supabase/server` — async, cookie-based session, for server components/actions.
+- Route protection: `updateSession()` in `src/utils/supabase/middleware.ts`, invoked from `src/proxy.ts` after the i18n proxy.
+  - Unauthenticated + `/dashboard`, `/profile`, `/portfolio` → redirect to `/login`.
+  - Authenticated + `/login`, `/registration` → redirect to `/`.
+- To protect a new route, add its path to the `PROTECTED` array in `middleware.ts`. Nothing else is checked.
+
+## Known Traps
+
+- **Next 16 renamed `middleware.ts` to `proxy.ts`.** The request entrypoint is `src/proxy.ts`; it chains `i18nProxy` → `updateSession`. Do not reintroduce a `middleware.ts` or reorder the chain — auth redirects and locale handling depend on it.
+- **Two Supabase clients.** Using the server client in a client component (or vice versa) silently drops the session. Pick by execution context, not by convenience.
+- **Server client cookie adapter** (`getAll`/`setAll`) is load-bearing for session refresh. Don't replace it with manual `document.cookie` or raw header reads.
+- **`experimental.rootParams: true` in `next.config.ts`** is required for `next/root-params` on Next 16.2. Removing it breaks any code reading root-level params.
+- **Matcher in `proxy.ts`** excludes static assets (`_next/static`, images, favicon). Extending matched paths to static files adds unnecessary auth work per asset request.
+
+## Off Limits
+
+- Generated artifacts: `.next/`, `out/`, `build/` — regenerate, never edit.
+- `.env*` files — never commit, never modify values.
+- `package-lock.json` — no manual edits; dependency changes only via npm.
+- Applied migrations in `supabase/migrations/` are immutable; new ones only via the Supabase CLI.
+- Do not rename or move `src/app/(auth)/`, `src/proxy.ts`, or `src/i18n.config.ts` — the proxy chain and matcher break silently.
+- `node_modules` — manage via npm, never delete by hand mid-session.
 
 ## Definition of Done
 
-1. **Code Quality**:
-   - Все файлы проходят `npm run lint` без ошибок и предупреждений
-   - TypeScript компилируется без ошибок (`tsconfig.json`)
-
-2. **Functionality**:
-   - Приложения работает в dev режиме: `npm run dev`
-   - Сборка проходит успешно: `npm run build`
-   - Production сервер стартует: `npm run start`
-
-3. **Documentation**:
-   - README.md обновлён при необходимости
-   - AGENTS.md актуален и содержит все секции
-
-4. **Testing** :
-   - Test suite отсутствует; при добавлении использовать Vitest
+1. `npm run lint` passes with no new errors on changed files (pre-existing warnings outside the diff are acceptable).
+2. `npx tsc --noEmit` passes.
+3. `npm run build` succeeds and `npm run start` serves the app.
+4. README updated if user-visible behavior changed.

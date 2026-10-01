@@ -7,7 +7,7 @@ import ErrorAlert from "@/components/ErrorAlert";
 import { useAuth } from "@/hooks/useAuth";
 import { MIN_PASSWORD_LENGTH } from "@/consts";
 
-export default function RegisterPage() {
+function LoginPage() {
   const { errors, formError, values, loading, setField, handleSubmit } =
     useAuth("login");
 
@@ -55,3 +55,5 @@ export default function RegisterPage() {
     </div>
   );
 }
+
+export default LoginPage;

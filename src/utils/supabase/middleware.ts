@@ -36,8 +36,6 @@ export async function updateSession(
 
   const path = request.nextUrl.pathname;
 
-  console.log("path", path);
-
   if (!user && PROTECTED.some((p) => path.startsWith(p))) {
     const url = request.nextUrl.clone();
     url.pathname = "/login";
