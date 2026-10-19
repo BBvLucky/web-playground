@@ -17,5 +17,10 @@
     "signOut": "Выйти",
     "login": "Логин",
     "password": "Пароль"
+  },
+  "themeToggler": {
+    "light": "Светлая",
+    "dark": "Тёмная",
+    "system": "Системная"
   }
 }

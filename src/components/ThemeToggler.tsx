@@ -1,7 +1,10 @@
+import { useT } from "next-i18next/client";
+
 import { useTheme } from "@/providers/ThemeProvider";
 
 function ThemeToggler() {
   const { theme, setTheme } = useTheme();
+  const { t } = useT("common");
 
   return (
     <div className="px-3 py-1">
@@ -16,7 +19,7 @@ function ThemeToggler() {
           }`}
         >
           <span>☀️</span>
-          <span>Светлая</span>
+          <span>{t("themeToggler.light")}</span>
         </button>
         <button
           onClick={() => setTheme("dark")}
@@ -28,11 +31,11 @@ function ThemeToggler() {
           }`}
         >
           <span>🌙</span>
-          <span>Тёмная</span>
+          <span>{t("themeToggler.dark")}</span>
         </button>
         <button
           onClick={() => setTheme("system")}
-          title="Как в системе"
+          title={t("themeToggler.system")}
           className={`flex-1 flex items-center justify-center gap-1.5 px-2 py-1.5 text-xs font-medium rounded-md transition-colors ${
             theme === "system"
               ? "bg-white dark:bg-neutral-800 shadow-sm text-neutral-900 dark:text-neutral-100"
@@ -40,7 +43,7 @@ function ThemeToggler() {
           }`}
         >
           <span>💻</span>
-          <span>Системная</span>
+          <span>{t("themeToggler.system")}</span>
         </button>
       </div>
     </div>

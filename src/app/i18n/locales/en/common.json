@@ -17,5 +17,10 @@
     "signOut": "Sign Out",
     "login": "Login",
     "password": "Password"
+  },
+  "themeToggler": {
+    "light": "Light",
+    "dark": "Dark",
+    "system": "System"
   }
 }

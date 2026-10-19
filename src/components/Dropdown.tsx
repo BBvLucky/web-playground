@@ -61,7 +61,7 @@ function Dropdown() {
       </button>
 
       {open && (
-        <div className="absolute right-0 mt-2 w-64 bg-bg-card border border-neutral-200 dark:border-neutral-800 rounded-xl shadow-xl p-2 flex flex-col gap-1 animate-in fade-in slide-in-from-top-2 duration-150">
+        <div className="absolute right-0 mt-2 w-84 bg-bg-card border border-neutral-200 dark:border-neutral-800 rounded-xl shadow-xl p-2 flex flex-col gap-1 animate-in fade-in slide-in-from-top-2 duration-150">
           <DropdownSectionTitle>{t("dropdown.account")}</DropdownSectionTitle>
           {loading ? (
             <div className="px-3 py-2 text-sm text-neutral-400 italic">…</div>
